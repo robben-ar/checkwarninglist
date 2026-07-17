@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IOC // WARNLIST CHECK — BASE4 CyberSOC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e0d;
+    --panel:#121918;
+    --panel-2:#0e1413;
+    --border:#20302b;
+    --border-soft:#182420;
+    --text:#dbe6e1;
+    --text-dim:#7c948c;
+    --text-faint:#4d615b;
+    --amber:#e8a33d;
+    --amber-dim:#5c451f;
+    --green:#4ade80;
+    --green-dim:#1f3b2a;
+    --red:#f87171;
+    --red-dim:#3d2020;
+    --cyan:#4fd1c5;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+    --disp:'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -10%, rgba(232,163,61,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 0%, rgba(79,209,197,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:14px;
+    line-height:1.5;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px;}
+
+  /* header */
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:24px;flex-wrap:wrap;}
+  .eyebrow{font-size:11px;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;margin:0 0 6px;font-weight:600;}
+  h1{font-family:var(--disp);font-size:26px;margin:0;color:#f2f7f4;letter-spacing:-0.01em;}
+  h1 .slash{color:var(--text-faint);font-weight:500;}
+  .subtitle{color:var(--text-dim);font-size:12.5px;margin-top:6px;max-width:520px;}
+  .badge{border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:11px;color:var(--text-dim);white-space:nowrap;}
+  .badge b{color:var(--cyan);font-weight:600;}
+
+  section{margin-bottom:22px;}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px 20px;}
+  .panel-title{font-family:var(--disp);font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .panel-title .n{color:var(--text-faint);font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--mono);}
+
+  textarea{
+    width:100%;min-height:130px;background:var(--panel-2);border:1px solid var(--border-soft);
+    color:var(--text);font-family:var(--mono);font-size:13px;border-radius:4px;padding:12px 14px;
+    resize:vertical;outline:none;
+  }
+  textarea:focus{border-color:var(--amber);}
+  textarea::placeholder{color:var(--text-faint);}
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+  button{
+    font-family:var(--mono);font-size:12.5px;font-weight:500;letter-spacing:.02em;
+    border-radius:4px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+    padding:9px 15px;cursor:pointer;transition:border-color .15s, color .15s;
+  }
+  button:hover{border-color:var(--text-dim);}
+  button.primary{background:var(--amber);border-color:var(--amber);color:#1a1206;font-weight:600;}
+  button.primary:hover{background:#f0b155;}
+  button.primary:disabled{opacity:.45;cursor:not-allowed;background:var(--amber);}
+  button.ghost{background:transparent;color:var(--text-dim);}
+  button.ghost:hover{color:var(--text);}
+  .hint{color:var(--text-faint);font-size:11.5px;}
+
+  /* list selector */
+  .list-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .search-box{
+    flex:1;min-width:180px;background:var(--panel-2);border:1px solid var(--border-soft);border-radius:4px;
+    padding:8px 12px;color:var(--text);font-family:var(--mono);font-size:12.5px;outline:none;
+  }
+  .search-box:focus{border-color:var(--cyan);}
+  .list-grid{
+    max-height:230px;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:2px 10px;border:1px solid var(--border-soft);border-radius:4px;padding:10px;background:var(--panel-2);
+  }
+  .list-item{display:flex;align-items:baseline;gap:7px;padding:4px 2px;font-size:12px;color:var(--text-dim);border-radius:3px;}
+  .list-item:hover{color:var(--text);}
+  .list-item input{accent-color:var(--amber);}
+  .list-item label{cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .list-item.cached label::after{content:" ●";color:var(--green);font-size:9px;}
+
+  /* console feed */
+  .console{
+    background:#080b0a;border:1px solid var(--border-soft);border-radius:4px;padding:10px 14px;
+    max-height:130px;overflow-y:auto;font-size:11.5px;color:var(--text-faint);display:none;
+  }
+  .console.show{display:block;}
+  .console div{white-space:pre-wrap;margin:1px 0;}
+  .console .ok{color:var(--green);}
+  .console .err{color:var(--red);}
+  .console .warn{color:var(--amber);}
+
+  /* results */
+  .summary-bar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;}
+  .stat{border:1px solid var(--border);border-radius:5px;padding:10px 16px;background:var(--panel-2);min-width:110px;}
+  .stat .num{font-family:var(--disp);font-size:22px;font-weight:700;color:#f2f7f4;}
+  .stat .lbl{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+  .stat.hit .num{color:var(--red);}
+  .stat.clean .num{color:var(--green);}
+
+  /* settings (token) */
+  details.settings{border:1px solid var(--border);border-radius:6px;background:var(--panel);margin-bottom:22px;}
+  details.settings summary{
+    cursor:pointer;padding:12px 20px;font-size:12px;color:var(--text-dim);
+    display:flex;align-items:center;justify-content:space-between;list-style:none;
+  }
+  details.settings summary::-webkit-details-marker{display:none;}
+  details.settings summary .rl{font-size:11px;color:var(--text-faint);}
+  details.settings summary .rl b{color:var(--cyan);}
+  .settings-body{padding:0 20px 18px;border-top:1px solid var(--border-soft);}
+  .settings-body p{color:var(--text-dim);font-size:12px;margin:12px 0 10px;}
+  .token-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .token-row input{
+    flex:1;min-width:220px;background:var(--panel-2);border:1px solid var(--border-soft);border-radius:4px;
+    padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:12.5px;outline:none;
+  }
+  .token-row input:focus{border-color:var(--cyan);}
+  .token-status{font-size:11px;color:var(--text-faint);margin-top:8px;}
+  .token-status.ok{color:var(--green);}
+  .token-status.err{color:var(--red);}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;color:var(--text-faint);font-weight:500;text-transform:uppercase;font-size:10.5px;
+    letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border);
+  }
+  tbody td{padding:9px 10px;border-bottom:1px solid var(--border-soft);vertical-align:top;}
+  tbody tr:hover{background:rgba(255,255,255,0.015);}
+  .ioc-val{color:#f2f7f4;word-break:break-all;}
+  .type-tag{color:var(--cyan);font-size:11px;}
+  .status{display:inline-flex;align-items:center;gap:5px;font-weight:600;font-size:11.5px;padding:3px 8px;border-radius:3px;}
+  .status.match{background:var(--red-dim);color:var(--red);}
+  .status.clean{background:var(--green-dim);color:var(--green);}
+  .match-list{color:var(--text-dim);font-size:11.5px;line-height:1.6;}
+  .match-list b{color:var(--amber);font-weight:600;}
+  .empty-state{color:var(--text-faint);text-align:center;padding:40px 0;font-size:12.5px;}
+
+  footer{margin-top:30px;color:var(--text-faint);font-size:11px;text-align:center;}
+  footer a{color:var(--text-dim);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">BASE4 Security <span style="color:var(--text-faint)">//</span> CyberSOC</p>
+      <h1>IOC <span class="slash">//</span> Warnlist Check</h1>
+      <p class="subtitle">Valida IPs, dominios, hashes y URLs contra las MISP Warning Lists oficiales para descartar falsos positivos antes de escalar un indicador.</p>
+    </div>
+    <div class="badge">Fuente: <b>github.com/MISP/misp-warninglists</b></div>
+  </header>
+
+  <details class="settings" id="settingsPanel">
+    <summary>
+      <span>⚙ Configuración — GitHub API rate limit <span class="rl" id="rlLabel"></span></span>
+      <span style="color:var(--text-faint);">▾</span>
+    </summary>
+    <div class="settings-body">
+      <p>Sin token, GitHub limita las consultas a <b style="color:var(--text)">60/hora por IP</b> a <code>api.github.com</code>
+      (compartidas entre todos los que usen el portal desde la misma red/oficina). Con un
+      <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:var(--cyan)">token de acceso personal</a>
+      (no requiere ningún permiso especial, alcanza uno sin scopes) el límite sube a 5000/hora.</p>
+      <div class="token-row">
+        <input type="password" id="ghToken" placeholder="ghp_… (opcional, se guarda solo en tu navegador)">
+        <button class="ghost" id="btnSaveToken">Guardar</button>
+        <button class="ghost" id="btnClearToken">Quitar</button>
+      </div>
+      <div class="token-status" id="tokenStatus">El token se guarda únicamente en el almacenamiento local de tu navegador — nunca se envía a ningún servidor que no sea api.github.com.</div>
+    </div>
+  </details>
+
+  <section class="panel">
+    <p class="panel-title">1 · Indicadores a validar</p>
+    <textarea id="iocInput" placeholder="Un IOC por línea. Ej:&#10;8.8.8.8&#10;pastebin.com&#10;185.220.101.5&#10;44d88612fea8a8f36de82e1278abb02f&#10;https://update-microsoft-secure.com/login"></textarea>
+    <div class="row">
+      <span class="hint" id="iocCount">0 indicadores cargados</span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <p class="panel-title">2 · Warning lists a consultar <span class="n" id="listCountLbl">cargando…</span></p>
+    <div class="list-controls">
+      <input class="search-box" id="listSearch" placeholder="Filtrar listas (ej: cloud, dns, cdn, hash)…">
+      <button class="ghost" id="btnRecommended">Recomendadas</button>
+      <button class="ghost" id="btnAll">Todas</button>
+      <button class="ghost" id="btnNone">Ninguna</button>
+      <button class="ghost" id="btnReloadIndex">↻ Recargar índice</button>
+    </div>
+    <div class="list-grid" id="listGrid">
+      <div class="empty-state">Consultando índice de warning lists en GitHub…</div>
+    </div>
+  </section>
+
+  <div class="row" style="margin:-6px 0 20px;">
+    <button class="primary" id="btnAnalyze" disabled>Analizar indicadores</button>
+    <button class="ghost" id="btnClearCache">Vaciar caché local</button>
+    <span class="hint" id="cacheHint"></span>
+  </div>
+
+  <div class="console" id="console"></div>
+
+  <section id="resultsSection" style="display:none;">
+    <div class="summary-bar" id="summaryBar"></div>
+    <div class="panel" style="padding:0;overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th style="width:22%">Indicador</th><th style="width:10%">Tipo</th><th style="width:12%">Estado</th><th>Coincidencias</th></tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button class="ghost" id="btnExport">Exportar CSV</button>
+    </div>
+  </section>
+
+  <footer>
+    Los datos de warning lists se obtienen en vivo desde el repositorio público de MISP (licencia CC0). Este portal corre enteramente en el navegador — ningún IOC se envía a un servidor de terceros más allá de las consultas de lookup contra GitHub.
+  </footer>
+</div>
+
+<script>
+const GH_API = "https://api.github.com/repos/MISP/misp-warninglists/contents/lists";
+const RAW_BASE = "https://raw.githubusercontent.com/MISP/misp-warninglists/main/lists";
+const RECOMMENDED = new Set([
+  "rfc1918","rfc6598","multicast","dynamic-dns","cloudflare","google","google-gcp",
+  "microsoft-azure","microsoft-office365","amazon-aws","akamai","fastly","stackpath",
+  "public-dns-v4","public-dns-v6","public-dns-hostname","alexa","tranco","disposable-email",
+  "eicar.com","googlebot","bingbot","vpn-ipv4","vpn-ipv6","ovh-cluster","parking-domain",
+  "parking-domain-ns","empty-hashes","nioc-filehash"
+]);
+
+let availableLists = [];   // [{name}]
+let selected = new Set();
+let listCache = {};        // name -> {name,type,list,description,version,matching_attributes}
+let lastResults = [];
+let ghToken = '';
+
+const $ = (id) => document.getElementById(id);
+const consoleEl = $('console');
+
+function ghHeaders(){
+  const h = {'Accept':'application/vnd.github+json'};
+  if(ghToken) h['Authorization'] = 'Bearer ' + ghToken;
+  return h;
+}
+
+function updateRateLabel(resp){
+  const remaining = resp.headers.get('x-ratelimit-remaining');
+  const limit = resp.headers.get('x-ratelimit-limit');
+  if(remaining!==null && limit!==null){
+    $('rlLabel').innerHTML = `— <b>${remaining}</b>/${limit} restantes`;
+  }
+}
+
+async function loadToken(){
+  try{
+    const r = await window.storage.get('gh_token', false);
+    if(r && r.value){ ghToken = r.value; $('ghToken').value = r.value; $('tokenStatus').textContent = 'Token cargado desde este navegador.'; $('tokenStatus').className='token-status ok'; }
+  }catch(e){ /* sin token guardado */ }
+}
+
+$('btnSaveToken').addEventListener('click', async ()=>{
+  const v = $('ghToken').value.trim();
+  if(!v){ $('tokenStatus').textContent = 'Pegá un token antes de guardar.'; $('tokenStatus').className='token-status err'; return; }
+  ghToken = v;
+  try{ await window.storage.set('gh_token', v, false); }catch(e){}
+  $('tokenStatus').textContent = 'Token guardado. Recargando índice con el nuevo límite…';
+  $('tokenStatus').className='token-status ok';
+  loadIndex(true);
+});
+
+$('btnClearToken').addEventListener('click', async ()=>{
+  ghToken = '';
+  $('ghToken').value = '';
+  try{ await window.storage.delete('gh_token', false); }catch(e){}
+  $('tokenStatus').textContent = 'Token quitado — volviendo al límite sin autenticar (60/hora).';
+  $('tokenStatus').className='token-status';
+});
+
+
+function logc(msg, cls){
+  consoleEl.classList.add('show');
+  const d = document.createElement('div');
+  if(cls) d.className = cls;
+  d.textContent = msg;
+  consoleEl.appendChild(d);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+// ---------- storage cache helpers ----------
+async function getCached(name){
+  try{
+    const r = await window.storage.get('wl:'+name, false);
+    if(r && r.value) return JSON.parse(r.value);
+  }catch(e){ /* not found */ }
+  return null;
+}
+async function setCached(name, data){
+  try{ await window.storage.set('wl:'+name, JSON.stringify(data), false); }catch(e){ /* best effort */ }
+}
+
+// ---------- load index ----------
+async function loadIndex(force){
+  $('listGrid').innerHTML = '<div class="empty-state">Consultando índice de warning lists en GitHub…</div>';
+  try{
+    const resp = await fetch(GH_API, {headers: ghHeaders()});
+    updateRateLabel(resp);
+    if(!resp.ok){
+      if(resp.status===403){
+        throw new Error('rate limit de GitHub agotado — cargá un token en "⚙ Configuración" para subirlo a 5000/hora');
+      }
+      throw new Error('GitHub API respondió '+resp.status);
+    }
+    const data = await resp.json();
+    availableLists = data.filter(d=>d.type==='dir').map(d=>({name:d.name})).sort((a,b)=>a.name.localeCompare(b.name));
+    if(selected.size===0){
+      availableLists.forEach(l=>{ if(RECOMMENDED.has(l.name)) selected.add(l.name); });
+    }
+    renderListGrid();
+    $('listCountLbl').textContent = availableLists.length + ' listas disponibles';
+    $('btnAnalyze').disabled = false;
+  }catch(e){
+    $('listGrid').innerHTML = '<div class="empty-state">No se pudo consultar el índice de GitHub (' + e.message + '). Verificá conectividad o probá "Recargar índice".</div>';
+    $('listCountLbl').textContent = 'error';
+  }
+}
+
+function renderListGrid(filterText){
+  const grid = $('listGrid');
+  grid.innerHTML = '';
+  const f = (filterText||'').toLowerCase();
+  const items = availableLists.filter(l => !f || l.name.toLowerCase().includes(f));
+  if(items.length===0){ grid.innerHTML = '<div class="empty-state">Sin coincidencias</div>'; return; }
+  items.forEach(l=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'list-item' + (listCache[l.name] ? ' cached' : '');
+    const id = 'chk_'+l.name;
+    wrap.innerHTML = `<input type="checkbox" id="${id}" ${selected.has(l.name)?'checked':''}>
+                       <label for="${id}" title="${l.name}">${l.name}</label>`;
+    wrap.querySelector('input').addEventListener('change', (e)=>{
+      if(e.target.checked) selected.add(l.name); else selected.delete(l.name);
+    });
+    grid.appendChild(wrap);
+  });
+}
+
+$('listSearch').addEventListener('input', (e)=> renderListGrid(e.target.value));
+$('btnRecommended').addEventListener('click', ()=>{
+  selected = new Set(availableLists.filter(l=>RECOMMENDED.has(l.name)).map(l=>l.name));
+  renderListGrid($('listSearch').value);
+});
+$('btnAll').addEventListener('click', ()=>{
+  selected = new Set(availableLists.map(l=>l.name));
+  renderListGrid($('listSearch').value);
+});
+$('btnNone').addEventListener('click', ()=>{
+  selected = new Set();
+  renderListGrid($('listSearch').value);
+});
+$('btnReloadIndex').addEventListener('click', ()=> loadIndex(true));
+
+$('btnClearCache').addEventListener('click', async ()=>{
+  try{
+    const listing = await window.storage.list('wl:', false);
+    if(listing && listing.keys){
+      for(const k of listing.keys){ await window.storage.delete(k, false); }
+    }
+  }catch(e){}
+  listCache = {};
+  renderListGrid($('listSearch').value);
+  $('cacheHint').textContent = 'Caché local vaciada.';
+});
+
+// ---------- fetch a single warning list (cache-first) ----------
+async function fetchList(name){
+  if(listCache[name]) return listCache[name];
+  const cached = await getCached(name);
+  if(cached){
+    listCache[name] = cached;
+    logc('  '+name+' — desde caché local ('+cached.list.length+' entradas)', 'ok');
+    return cached;
+  }
+  const url = RAW_BASE + '/' + name + '/list.json';
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('HTTP '+resp.status);
+  const data = await resp.json();
+  listCache[name] = data;
+  setCached(name, data);
+  logc('  '+name+' — descargada ('+(data.list?data.list.length:0)+' entradas)', 'ok');
+  return data;
+}
+
+// ---------- IOC parsing & type detection ----------
+const RE_IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+const RE_IPV6 = /^[0-9a-fA-F:]+:[0-9a-fA-F:]*$/;
+const RE_HASH32 = /^[a-fA-F0-9]{32}$/;
+const RE_HASH40 = /^[a-fA-F0-9]{40}$/;
+const RE_HASH64 = /^[a-fA-F0-9]{64}$/;
+const RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const RE_DOMAIN = /^(\*\.)?([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+
+// Revierte notación "defanged" habitual en CTI (any[.]run, hxxps://, [@], etc.)
+// para que la detección de tipo y el matching funcionen igual que con el IOC "vivo".
+function refang(raw){
+  return raw.trim()
+    .replace(/\[\.\]|\(\.\)|\{\.\}/g, '.')
+    .replace(/\[dot\]/gi, '.')
+    .replace(/\[at\]|\(at\)/gi, '@')
+    .replace(/\[:\]/g, ':')
+    .replace(/\[\/\]/g, '/')
+    .replace(/hxxps/gi, 'https')
+    .replace(/hxxp/gi, 'http')
+    .replace(/^fxp:\/\//i, 'ftp://');
+}
+
+function detectType(raw){
+  const v = raw.trim();
+  if(/^https?:\/\//i.test(v)) return 'url';
+  if(v.includes('/') && RE_IPV4.test(v.split('/')[0])) return 'cidr4';
+  if(RE_IPV4.test(v)) return 'ipv4';
+  if(RE_IPV6.test(v) && v.includes(':')) return 'ipv6';
+  if(RE_HASH64.test(v)) return 'sha256';
+  if(RE_HASH40.test(v)) return 'sha1';
+  if(RE_HASH32.test(v)) return 'md5';
+  if(RE_EMAIL.test(v)) return 'email';
+  if(RE_DOMAIN.test(v)) return 'domain';
+  return 'string';
+}
+
+function hostnameFrom(raw, type){
+  try{
+    if(type==='url') return new URL(raw).hostname.toLowerCase();
+    if(type==='email') return raw.split('@')[1].toLowerCase();
+    if(type==='domain') return raw.toLowerCase();
+  }catch(e){}
+  return null;
+}
+
+// ---------- CIDR / IP matching ----------
+function ipv4ToInt(ip){
+  const p = ip.split('.').map(Number);
+  if(p.length!==4 || p.some(n=>isNaN(n)||n<0||n>255)) return null;
+  return ((p[0]<<24)>>>0) + (p[1]<<16) + (p[2]<<8) + p[3];
+}
+function ipv4InCidr(ip, cidr){
+  let [base, bits] = cidr.split('/');
+  bits = bits!==undefined ? parseInt(bits,10) : 32;
+  const ipInt = ipv4ToInt(ip), baseInt = ipv4ToInt(base);
+  if(ipInt===null || baseInt===null) return false;
+  if(bits===0) return true;
+  const mask = (~0 << (32-bits)) >>> 0;
+  return (ipInt & mask) === (baseInt & mask);
+}
+function expandIPv6(ip){
+  let [head, tail] = ip.split('::');
+  let headParts = head ? head.split(':').filter(x=>x!=='') : [];
+  let tailParts = tail!==undefined && tail!=='' ? tail.split(':').filter(x=>x!=='') : [];
+  if(tail===undefined){ headParts = ip.split(':'); tailParts=[]; }
+  const missing = 8 - headParts.length - tailParts.length;
+  const zeros = ip.includes('::') ? new Array(Math.max(missing,0)).fill('0') : [];
+  const full = [...headParts, ...zeros, ...tailParts];
+  while(full.length<8) full.push('0');
+  return full.map(h=>parseInt(h||'0',16));
+}
+function ipv6ToBigInt(ip){
+  try{
+    const parts = expandIPv6(ip);
+    let val = 0n;
+    for(const p of parts){ val = (val << 16n) + BigInt(p); }
+    return val;
+  }catch(e){ return null; }
+}
+function ipv6InCidr(ip, cidr){
+  let [base, bits] = cidr.split('/');
+  bits = bits!==undefined ? parseInt(bits,10) : 128;
+  const ipVal = ipv6ToBigInt(ip), baseVal = ipv6ToBigInt(base);
+  if(ipVal===null || baseVal===null) return false;
+  if(bits===0) return true;
+  const shift = BigInt(128-bits);
+  return (ipVal >> shift) === (baseVal >> shift);
+}
+
+// ---------- match a single IOC against one loaded list ----------
+function matchAgainstList(raw, type, listObj){
+  const matches = [];
+  if(!listObj.list) return matches;
+  const hostname = hostnameFrom(raw, type);
+  const lower = raw.toLowerCase();
+
+  for(const entry of listObj.list){
+    let hit = false;
+    switch(listObj.type){
+      case 'string':
+        if(lower === String(entry).toLowerCase()) hit = true;
+        else if(hostname && hostname === String(entry).toLowerCase()) hit = true;
+        break;
+      case 'substring':
+        if(lower.includes(String(entry).toLowerCase())) hit = true;
+        break;
+      case 'hostname':
+        if(hostname){
+          const e = String(entry).toLowerCase();
+          if(hostname === e || hostname.endsWith('.'+e)) hit = true;
+        }
+        break;
+      case 'cidr':
+        if((type==='ipv4') ){
+          hit = ipv4InCidr(raw, entry);
+        } else if(type==='ipv6'){
+          hit = ipv6InCidr(raw, entry);
+        } else if(type==='cidr4'){
+          hit = ipv4InCidr(raw.split('/')[0], entry);
+        }
+        break;
+      case 'regex':
+        try{ if(new RegExp(entry, 'i').test(raw)) hit = true; }catch(e){}
+        break;
+    }
+    if(hit){ matches.push(entry); if(matches.length>=3) break; }
+  }
+  return matches;
+}
+
+// ---------- main analyze flow ----------
+$('btnAnalyze').addEventListener('click', analyze);
+
+async function analyze(){
+  const raws = $('iocInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const iocs = [...new Set(raws)];
+  $('iocCount').textContent = iocs.length + ' indicadores cargados';
+  if(iocs.length===0){ alert('Pegá al menos un IOC.'); return; }
+  if(selected.size===0){ alert('Seleccioná al menos una warning list.'); return; }
+
+  $('btnAnalyze').disabled = true;
+  $('btnAnalyze').textContent = 'Analizando…';
+  consoleEl.innerHTML = '';
+  logc('> cargando '+selected.size+' warning lists seleccionadas…');
+
+  const loadedLists = [];
+  for(const name of selected){
+    try{
+      const l = await fetchList(name);
+      loadedLists.push(l);
+    }catch(e){
+      logc('  '+name+' — error: '+e.message, 'err');
+    }
+  }
+  logc('> '+loadedLists.length+' listas listas. Ejecutando matching sobre '+iocs.length+' IOC(s)…', 'warn');
+  renderListGrid($('listSearch').value);
+
+  const results = iocs.map(raw=>{
+    const value = refang(raw);
+    const type = detectType(value);
+    const found = [];
+    for(const l of loadedLists){
+      const m = matchAgainstList(value, type, l);
+      if(m.length>0) found.push({name:l.name, description:l.description, sample:m});
+    }
+    return {raw, value, type, found};
+  });
+
+  lastResults = results;
+  logc('> listo.', 'ok');
+  renderResults(results);
+  $('btnAnalyze').disabled = false;
+  $('btnAnalyze').textContent = 'Analizar indicadores';
+}
+
+function renderResults(results){
+  $('resultsSection').style.display = 'block';
+  const hits = results.filter(r=>r.found.length>0).length;
+  $('summaryBar').innerHTML = `
+    <div class="stat"><div class="num">${results.length}</div><div class="lbl">Indicadores</div></div>
+    <div class="stat hit"><div class="num">${hits}</div><div class="lbl">En warning list</div></div>
+    <div class="stat clean"><div class="num">${results.length-hits}</div><div class="lbl">Sin coincidencias</div></div>
+    <div class="stat"><div class="num">${selected.size}</div><div class="lbl">Listas consultadas</div></div>
+  `;
+  const body = $('resultsBody');
+  body.innerHTML = '';
+  results.forEach(r=>{
+    const tr = document.createElement('tr');
+    const statusHtml = r.found.length>0
+      ? `<span class="status match">⚠ EN WARNLIST</span>`
+      : `<span class="status clean">✓ SIN COINCIDENCIAS</span>`;
+    const matchesHtml = r.found.length>0
+      ? r.found.map(f=>`<div><b>${f.name}</b> — ${f.description||''}</div>`).join('')
+      : '<span style="color:var(--text-faint)">—</span>';
+    const refangNote = r.value !== r.raw
+      ? `<div style="color:var(--text-faint);font-size:10.5px;margin-top:2px;">→ ${escapeHtml(r.value)}</div>`
+      : '';
+    tr.innerHTML = `
+      <td class="ioc-val">${escapeHtml(r.raw)}${refangNote}</td>
+      <td class="type-tag">${r.type}</td>
+      <td>${statusHtml}</td>
+      <td class="match-list">${matchesHtml}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+$('btnExport').addEventListener('click', ()=>{
+  if(lastResults.length===0) return;
+  let csv = 'ioc,ioc_refangeado,tipo,estado,listas_coincidentes\n';
+  lastResults.forEach(r=>{
+    const estado = r.found.length>0 ? 'EN_WARNLIST' : 'SIN_COINCIDENCIAS';
+    const listas = r.found.map(f=>f.name).join('|');
+    csv += `"${r.raw.replace(/"/g,'""')}","${r.value.replace(/"/g,'""')}","${r.type}","${estado}","${listas}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ioc_warnlist_check.csv';
+  a.click();
+});
+
+$('iocInput').addEventListener('input', (e)=>{
+  const n = e.target.value.split('\n').map(s=>s.trim()).filter(Boolean).length;
+  $('iocCount').textContent = n + ' indicadores cargados';
+});
+
+loadToken().then(loadIndex);
+</script>
+</body>
+</html>
