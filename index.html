@@ -273,27 +273,27 @@ function updateRateLabel(resp){
   }
 }
 
-async function loadToken(){
+function loadToken(){
   try{
-    const r = await window.storage.get('gh_token', false);
-    if(r && r.value){ ghToken = r.value; $('ghToken').value = r.value; $('tokenStatus').textContent = 'Token cargado desde este navegador.'; $('tokenStatus').className='token-status ok'; }
+    const v = localStorage.getItem('gh_token');
+    if(v){ ghToken = v; $('ghToken').value = v; $('tokenStatus').textContent = 'Token cargado desde este navegador.'; $('tokenStatus').className='token-status ok'; }
   }catch(e){ /* sin token guardado */ }
 }
 
-$('btnSaveToken').addEventListener('click', async ()=>{
+$('btnSaveToken').addEventListener('click', ()=>{
   const v = $('ghToken').value.trim();
   if(!v){ $('tokenStatus').textContent = 'Pegá un token antes de guardar.'; $('tokenStatus').className='token-status err'; return; }
   ghToken = v;
-  try{ await window.storage.set('gh_token', v, false); }catch(e){}
+  try{ localStorage.setItem('gh_token', v); }catch(e){}
   $('tokenStatus').textContent = 'Token guardado. Recargando índice con el nuevo límite…';
   $('tokenStatus').className='token-status ok';
   loadIndex(true);
 });
 
-$('btnClearToken').addEventListener('click', async ()=>{
+$('btnClearToken').addEventListener('click', ()=>{
   ghToken = '';
   $('ghToken').value = '';
-  try{ await window.storage.delete('gh_token', false); }catch(e){}
+  try{ localStorage.removeItem('gh_token'); }catch(e){}
   $('tokenStatus').textContent = 'Token quitado — volviendo al límite sin autenticar (60/hora).';
   $('tokenStatus').className='token-status';
 });
@@ -311,13 +311,13 @@ function logc(msg, cls){
 // ---------- storage cache helpers ----------
 async function getCached(name){
   try{
-    const r = await window.storage.get('wl:'+name, false);
-    if(r && r.value) return JSON.parse(r.value);
+    const v = localStorage.getItem('wl:'+name);
+    if(v) return JSON.parse(v);
   }catch(e){ /* not found */ }
   return null;
 }
 async function setCached(name, data){
-  try{ await window.storage.set('wl:'+name, JSON.stringify(data), false); }catch(e){ /* best effort */ }
+  try{ localStorage.setItem('wl:'+name, JSON.stringify(data)); }catch(e){ /* best effort */ }
 }
 
 // ---------- load index ----------
@@ -380,12 +380,14 @@ $('btnNone').addEventListener('click', ()=>{
 });
 $('btnReloadIndex').addEventListener('click', ()=> loadIndex(true));
 
-$('btnClearCache').addEventListener('click', async ()=>{
+$('btnClearCache').addEventListener('click', ()=>{
   try{
-    const listing = await window.storage.list('wl:', false);
-    if(listing && listing.keys){
-      for(const k of listing.keys){ await window.storage.delete(k, false); }
+    const keys = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith('wl:')) keys.push(k);
     }
+    keys.forEach(k=>localStorage.removeItem(k));
   }catch(e){}
   listCache = {};
   renderListGrid($('listSearch').value);
@@ -643,7 +645,8 @@ $('iocInput').addEventListener('input', (e)=>{
   $('iocCount').textContent = n + ' indicadores cargados';
 });
 
-loadToken().then(loadIndex);
+loadToken();
+loadIndex();
 </script>
 </body>
 </html>
