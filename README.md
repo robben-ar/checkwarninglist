@@ -1,4 +1,4 @@
-# IOC // Warnlist Check — BASE4 CyberSOC
+# IOC // Warnlist Check
 
 Portal HTML standalone para validar IOCs (IPs, dominios, hashes, URLs) contra las
 [MISP Warning Lists](https://github.com/MISP/misp-warninglists) oficiales y descartar
@@ -19,7 +19,7 @@ Por eso se puede alojar tal cual en GitHub Pages — es solo un archivo estátic
 
 ### Dominio propio (opcional)
 
-Para servirlo bajo un dominio de BASE4 (ej. `tools.base4sec.com`):
+Para servirlo bajo un dominio propio (ej. `tools.tu-dominio.com`):
 
 1. Creá un archivo `CNAME` en la raíz del repo con una sola línea: el dominio elegido.
 2. En tu DNS, agregá un registro `CNAME` de ese subdominio apuntando a `<usuario-u-org>.github.io`.
@@ -32,7 +32,7 @@ Para servirlo bajo un dominio de BASE4 (ej. `tools.base4sec.com`):
   toca el navegador de cada usuario son los IOCs que ese usuario pega, y eso nunca
   sale del navegador salvo hacia GitHub para el lookup de warninglists.
 - **Privado**: Pages en repos privados requiere GitHub Pro, Team o Enterprise (o
-  una organización con esos planes). Si BASE4 no quiere que el portal quede
+  una organización con esos planes). Si no querés que el portal quede
   público/indexable, esta es la vía.
 
 ## Rate limit de la API de GitHub
